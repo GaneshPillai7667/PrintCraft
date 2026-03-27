@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: src/PrintCraft.API/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=db.<your-project-ref>.supabase.co;Port=7129;Database=postgres;Username=postgres;Password=<SUPABASE_DB_PASSWORD>;SSL Mode=Require;Trust Server Certificate=true
+      ConnectionStrings__Redis: redis:6379
+      Jwt__Issuer: PrintCraft
+      Jwt__Audience: PrintCraft.Client
+      Jwt__SecretKey: CHANGE_THIS_TO_A_64_CHAR_MINIMUM_SUPER_SECRET_KEY_1234567890
+    depends_on:
+      - redis
+
+  PrintCraftClientPortal:
+    build:
+      context: .
+      dockerfile: PrintCraftClientPortal/Dockerfile
+      args:
+        VITE_API_BASE_URL: http://localhost:8080
+        VITE_DEFAULT_TENANT_ID: 11111111-1111-1111-1111-111111111111
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
